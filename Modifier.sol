@@ -32,7 +32,7 @@ contract Modifier is Owned {
         require(tokenBalance[msg.sender] >= _amount, "Not enough tokens;");
         assert(tokenBalance[_to + _amount >= tokenBalance[_to]]);
         assert(tokenBalance[msg.sender] - _amount <= tokenBalance[msg.sender]);
-        tokenBalance[owner] -= _amount;
+        tokenBalance[msg.sender] -= _amount;
         tokenBalance[_to] += _amount;
     }
 }
