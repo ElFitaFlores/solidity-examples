@@ -1,50 +1,7 @@
 pragma solidity ^0.6.0;
 
-contract Ownable {
-    address payable _owner;
-
-    constructor() public {
-        _owner = msg.sender;
-    }
-
-    modifier onlyOwner() {
-        require(isOwner(), "You are not the owner");
-        _;
-    }
-
-    function isOwner() public view returns (bool) {
-        return (msg.sender == _owner);
-    }
-}
-
-contract Item {
-    uint256 public priceInWei;
-    uint256 public pricePaid;
-    uint256 public index;
-
-    ItemManager parentContract;
-
-    constructor(
-        ItemManager _parentContract,
-        uint256 _priceInWei,
-        uint256 _index
-    ) public {
-        priceInWei = _priceInWei;
-        index = _index;
-        parentContract = _parentContract;
-    }
-
-    receive() external payable {
-        require(pricePaid == 0, "Item is already paid.");
-        require(priceInWei == msg.value, "Only full payment allowed.");
-        (bool seccess, ) = address(parentContract).call.value(msg.value)(
-            abi.encodeWithSignature("triggerPayment(uint256)", index)
-        );
-        require(success, "The transaction wasn't successful, canceling.");
-    }
-
-    fallback() external {}
-}
+import "./Item.sol";
+import "./Ownable.sol";
 
 contract ItemManager is Ownable {
     enum SupplyChainState {
@@ -88,11 +45,11 @@ contract ItemManager is Ownable {
 
     function triggerPayment(uint256 _itemIndex) public payable {
         require(
-            items[_itemIndex].itemPrice == msg.value,
+            items[_itemIndex]._itemPrice == msg.value,
             "Only full payments accepted."
         );
         require(
-            items[_itemIndex].state == SupplyChainState.Created,
+            items[_itemIndex]._state == SupplyChainState.Created,
             "Item is further in the chain."
         );
         items[_itemIndex]._state = SupplyChainState.Paid;
@@ -109,7 +66,7 @@ contract ItemManager is Ownable {
             items[_itemIndex]._state == SupplyChainState.Paid,
             "Item is further in the chain."
         );
-        items[_itemIndex].state = SupplyChainState.Delivered;
+        items[_itemIndex]._state = SupplyChainState.Delivered;
         emit SupplyChainStep(
             _itemIndex,
             uint256(items[itemIndex]._state),
